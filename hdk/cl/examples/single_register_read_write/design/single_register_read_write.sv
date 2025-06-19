@@ -1,3 +1,4 @@
+// single_register_read_write.sv
 // ============================================================================
 // Amazon FPGA Hardware Development Kit
 //
@@ -126,26 +127,34 @@ module single_register_read_write
 
 //=============================================================================
 // OCL
-//=============================================================================
+//=============================================================================  
+  simple_register #(
+    .DEFAULT_RESET_VALUE (32'h1234_5678)
+  ) simple_register_inst (
+    .clk        (clk_main_a0),
+    .rst_n      (rst_main_n),
+    .awvalid    (ocl_cl_awvalid),
+    .awaddr     (ocl_cl_awaddr),
+    .awready    (cl_ocl_awready),
 
-  // Cause Protocol Violations
-  always_comb begin
-    cl_ocl_bresp   = 'b0;
-    cl_ocl_rresp   = 'b0;
-    cl_ocl_rvalid  = 'b0;
-  end
+    .wvalid     (ocl_cl_wvalid),
+    .wdata      (ocl_cl_wdata),
+    .wstrb      (ocl_cl_wstrb),
+    .wready     (cl_ocl_wready),
 
-  // Remaining CL Output Ports
-  always_comb begin
-    cl_ocl_awready = 'b0;
-    cl_ocl_wready  = 'b0;
+    .bvalid     (cl_ocl_bvalid),
+    .bresp      (cl_ocl_bresp),
+    .bready     (ocl_cl_bready),
 
-    cl_ocl_bvalid = 'b0;
+    .arvalid    (ocl_cl_arvalid),
+    .araddr     (ocl_cl_araddr),
+    .arready    (cl_ocl_arready),
 
-    cl_ocl_arready = 'b0;
-
-    cl_ocl_rdata   = 'b0;
-  end
+    .rvalid     (cl_ocl_rvalid),
+    .rdata      (cl_ocl_rdata),
+    .rresp      (cl_ocl_rresp),
+    .rready     (ocl_cl_rready)
+  );
 
 //=============================================================================
 // SDA
@@ -305,4 +314,5 @@ module single_register_read_write
     PCIE_RP_TXN    = 'b0;
   end
 
+  
 endmodule // single_register_read_write
