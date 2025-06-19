@@ -27,8 +27,8 @@
 
 -include $CL_DIR/design/
 
+$CL_DIR/design/simple_register.sv
 $CL_DIR/design/single_register_read_write.sv
-$CL_DIR/design/cl_id_defines.vh
 
 ##### END AUTO-GENERATE ######
 ##############################
