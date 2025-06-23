@@ -26,3 +26,7 @@ single_register_read_write_base_test: all
 
 hardware_test: TEST=hardware_test
 hardware_test: all
+
+test_simple_register_c: TEST=test_simple_register_c
+test_simple_register_c: C_TEST=test_simple_register_c
+test_simple_register_c: all
