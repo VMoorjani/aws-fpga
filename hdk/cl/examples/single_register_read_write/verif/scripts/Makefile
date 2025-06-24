@@ -23,8 +23,8 @@ endif
 include $(HDK_COMMON_DIR)/verif/tb/scripts/Makefile.header.inc
 
 ### Files required to do C cosimulation
-C_FILES = $(C_SDK_USR_UTILS_DIR)/sh_dpi_tasks.c $(C_COMMON_DIR)/src/fpga_pci_sv.c
-C_INCLUDE_DIRS = $(C_SDK_USR_INC_DIR) $(C_SDK_USR_UTILS_DIR) $(C_COMMON_DIR)/include $(C_COMMON_DIR)/src $(C_INC_DIR) $(C_HEADER_INCLUDE_DIR)
+C_FILES = $(C_INC_DIR)/$(C_TEST).c $(C_COMMON_SRC_DIR)/sh_dpi_tasks.c $(C_COMMON_DIR)/src/fpga_pci_sv.c
+C_INCLUDE_DIRS = $(C_SDK_USR_INC_DIR) $(C_SDK_USR_UTILS_DIR) $(C_COMMON_DIR)/include $(C_COMMON_DIR)/src $(C_INC_DIR) $(C_HEADER_INCLUDE_DIR) $(CL_DIR)/software/include
 
 ### DEFAULT: Lists each test target under Makefile.tests
 REGRESSION_TEST_LIST = ${DEFAULT_REGRESSION_TEST_LIST_COLLECTION}
