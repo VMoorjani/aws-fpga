@@ -128,24 +128,32 @@ module Int4MatMul
 // OCL
 //=============================================================================
 
-  // Cause Protocol Violations
-  always_comb begin
-    cl_ocl_bresp   = 'b0;
-    cl_ocl_rresp   = 'b0;
-    cl_ocl_rvalid  = 'b0;
-  end
+  AXIMatmulHandler #(.M(8), .N(8), .K(8)) u_axi_matmul (
+    .clk        (clk_main_a0),
+    .rst_n      (rst_main_n),
 
-  // Remaining CL Output Ports
-  always_comb begin
-    cl_ocl_awready = 'b0;
-    cl_ocl_wready  = 'b0;
+    .awvalid    (ocl_cl_awvalid),
+    .awaddr     (ocl_cl_awaddr),
+    .awready    (cl_ocl_awready),
 
-    cl_ocl_bvalid = 'b0;
+    .wvalid     (ocl_cl_wvalid),
+    .wdata      (ocl_cl_wdata),
+    .wstrb      (ocl_cl_wstrb),
+    .wready     (cl_ocl_wready),
 
-    cl_ocl_arready = 'b0;
+    .bvalid     (cl_ocl_bvalid),
+    .bresp      (cl_ocl_bresp),
+    .bready     (ocl_cl_bready),
 
-    cl_ocl_rdata   = 'b0;
-  end
+    .arvalid    (ocl_cl_arvalid),
+    .araddr     (ocl_cl_araddr),
+    .arready    (cl_ocl_arready),
+
+    .rvalid     (cl_ocl_rvalid),
+    .rdata      (cl_ocl_rdata),
+    .rresp      (cl_ocl_rresp),
+    .rready     (ocl_cl_rready)
+  );
 
 //=============================================================================
 // SDA

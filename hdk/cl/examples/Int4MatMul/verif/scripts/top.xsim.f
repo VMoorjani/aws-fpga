@@ -27,8 +27,9 @@
 
 -include $CL_DIR/design/
 
+$CL_DIR/design/AXIMatmulHandler.sv
 $CL_DIR/design/Int4MatMul.sv
-$CL_DIR/design/cl_id_defines.vh
+$CL_DIR/design/matmul.sv
 
 ##### END AUTO-GENERATE ######
 ##############################
