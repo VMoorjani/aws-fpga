@@ -268,3 +268,43 @@ The build will create 4 new subdirectories under [./build](./build):
 Builds with timing violations will have a suffix of `_VIOLATED` under the `checkpoints` directory. Details can be found under the `reports` directory.
 
 After a successful build, you can follow the AFI creation, loading, and testing instructions in the [HDK design flow](./../../../../README.md#build-accelerator-afi-using-hdk-design-flow).
+
+
+### Model Structure
+LlamaForCausalLM(
+  (model): LlamaModel(
+    (embed_tokens): Embedding(49152, 576)
+    (layers): ModuleList(
+      (0-29): 30 x LlamaDecoderLayer(
+        (self_attn): LlamaSdpaAttention(
+          (q_proj): Linear(in_features=576, out_features=576, bias=False)
+          (k_proj): Linear(in_features=576, out_features=192, bias=False)
+          (v_proj): Linear(in_features=576, out_features=192, bias=False)
+          (o_proj): Linear(in_features=576, out_features=576, bias=False)
+          (rotary_emb): LlamaRotaryEmbedding()
+        )
+        (mlp): LlamaMLP(
+          (gate_proj): Linear(in_features=576, out_features=1536, bias=False)
+          (up_proj): Linear(in_features=576, out_features=1536, bias=False)
+          (down_proj): Linear(in_features=1536, out_features=576, bias=False)
+          (act_fn): SiLU()
+        )
+        (input_layernorm): LlamaRMSNorm((576,), eps=1e-05)
+        (post_attention_layernorm): LlamaRMSNorm((576,), eps=1e-05)
+      )
+    )
+    (norm): LlamaRMSNorm((576,), eps=1e-05)
+    (rotary_emb): LlamaRotaryEmbedding()
+  )
+  (lm_head): Linear(in_features=576, out_features=49152, bias=False)
+)
+
+### Address Map
+##### Note: This section only covers the portions of the above model that have been implemented so far, or ar under development. 
+1. There are 49152 tokens in the vocabulary. The embeddings are 576 dimensions, each of which is 4 bits. So, each token requires 288 bytes for it's embedding. 
+
+#### PCIS Interface Address Map
+0x1000000000 - 0x1000D7FFFF : Embeddings
+
+#### HBM Mmemory Space Address Map
+0x00000000 - 0x00D7FFFF : Embeddings

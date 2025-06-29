@@ -27,8 +27,10 @@
 
 -include $CL_DIR/design/
 
+$CL_DIR/design/cl_hbm_axi4.sv
+$CL_DIR/design/cl_dram_dma_pkg.sv
 $CL_DIR/design/SmolLM135M.sv
-$CL_DIR/design/cl_id_defines.vh
+$CL_DIR/design/cl_hbm_wrapper.sv
 
 ##### END AUTO-GENERATE ######
 ##############################

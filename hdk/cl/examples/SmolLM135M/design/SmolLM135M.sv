@@ -20,10 +20,12 @@
 // Top level module file for SmolLM135M
 //====================================================================================
 
+`include "cl_dram_dma_pkg.sv"
+
 module SmolLM135M
     #(
       parameter EN_DDR = 0,
-      parameter EN_HBM = 0
+      parameter EN_HBM = 1
     )
     (
       `include "cl_ports.vh"
@@ -32,10 +34,18 @@ module SmolLM135M
 `include "cl_id_defines.vh" // CL ID defines required for all examples
 `include "SmolLM135M_defines.vh"
 
+//=============================================================================
+// INTERNAL INTERFACES
+//=============================================================================
+
+  axi_bus_t  hbm_axi4_bus();
+  cfg_bus_t  hbm_stat_cfg_bus();
 
 //=============================================================================
 // GLOBALS
 //=============================================================================
+
+  logic hbm_ready;
 
   always_comb begin
      cl_sh_flr_done    = 'b1;
@@ -44,7 +54,7 @@ module SmolLM135M
      cl_sh_status2     = 'b0;
      cl_sh_id0         = `CL_SH_ID0;
      cl_sh_id1         = `CL_SH_ID1;
-     cl_sh_status_vled = 'b0;
+     cl_sh_status_vled = {15'b0, hbm_ready};
      cl_sh_dma_wr_full = 'b0;
      cl_sh_dma_rd_full = 'b0;
   end
@@ -265,32 +275,87 @@ module SmolLM135M
   end
 
 //=============================================================================
-// HBM MONITOR IO
+// HBM INTERFACE
 //=============================================================================
 
+  // Tie off the HBM AXI4 bus for now (user can connect their logic here)
   always_comb begin
-    hbm_apb_paddr_1   = 'b0;
-    hbm_apb_pprot_1   = 'b0;
-    hbm_apb_psel_1    = 'b0;
-    hbm_apb_penable_1 = 'b0;
-    hbm_apb_pwrite_1  = 'b0;
-    hbm_apb_pwdata_1  = 'b0;
-    hbm_apb_pstrb_1   = 'b0;
-    hbm_apb_pready_1  = 'b0;
-    hbm_apb_prdata_1  = 'b0;
-    hbm_apb_pslverr_1 = 'b0;
-
-    hbm_apb_paddr_0   = 'b0;
-    hbm_apb_pprot_0   = 'b0;
-    hbm_apb_psel_0    = 'b0;
-    hbm_apb_penable_0 = 'b0;
-    hbm_apb_pwrite_0  = 'b0;
-    hbm_apb_pwdata_0  = 'b0;
-    hbm_apb_pstrb_0   = 'b0;
-    hbm_apb_pready_0  = 'b0;
-    hbm_apb_prdata_0  = 'b0;
-    hbm_apb_pslverr_0 = 'b0;
+    hbm_axi4_bus.awvalid = 'b0;
+    hbm_axi4_bus.awaddr  = 'b0;
+    hbm_axi4_bus.awid    = 'b0;
+    hbm_axi4_bus.awlen   = 'b0;
+    hbm_axi4_bus.awsize  = 'b0;
+    hbm_axi4_bus.awburst = 'b0;
+    
+    hbm_axi4_bus.wvalid  = 'b0;
+    hbm_axi4_bus.wdata   = 'b0;
+    hbm_axi4_bus.wstrb   = 'b0;
+    hbm_axi4_bus.wlast   = 'b0;
+    hbm_axi4_bus.wid     = 'b0;
+    
+    hbm_axi4_bus.bready  = 'b1;
+    
+    hbm_axi4_bus.arvalid = 'b0;
+    hbm_axi4_bus.araddr  = 'b0;
+    hbm_axi4_bus.arid    = 'b0;
+    hbm_axi4_bus.arlen   = 'b0;
+    hbm_axi4_bus.arsize  = 'b0;
+    hbm_axi4_bus.arburst = 'b0;
+    
+    hbm_axi4_bus.rready  = 'b1;
   end
+
+  // Tie off the HBM stats config bus for now
+  always_comb begin
+    hbm_stat_cfg_bus.ack   = 'b1;
+    hbm_stat_cfg_bus.rdata = 'b0;
+  end
+
+  logic hbm_sync_rst_n;
+
+  xpm_cdc_async_rst CDC_ASYNC_RST_N_HBM
+  (
+    .src_arst               (rst_main_n               ),
+    .dest_clk               (clk_main_a0              ),
+    .dest_arst              (hbm_sync_rst_n           )
+  );
+
+  cl_hbm_axi4
+  #(
+    .HBM_PRESENT            (EN_HBM                   )
+  )
+  CL_HBM
+  (
+    .clk_hbm_ref            (clk_hbm_ref              ),
+    .clk                    (clk_main_a0              ),
+    .rst_n                  (hbm_sync_rst_n           ),
+    .hbm_axi4_bus           (hbm_axi4_bus             ),
+    .hbm_stat_bus           (hbm_stat_cfg_bus         ),
+    .i_hbm_apb_preset_n_1   (hbm_apb_preset_n_1       ),
+    .o_hbm_apb_paddr_1      (hbm_apb_paddr_1          ),
+    .o_hbm_apb_pprot_1      (hbm_apb_pprot_1          ),
+    .o_hbm_apb_psel_1       (hbm_apb_psel_1           ),
+    .o_hbm_apb_penable_1    (hbm_apb_penable_1        ),
+    .o_hbm_apb_pwrite_1     (hbm_apb_pwrite_1         ),
+    .o_hbm_apb_pwdata_1     (hbm_apb_pwdata_1         ),
+    .o_hbm_apb_pstrb_1      (hbm_apb_pstrb_1          ),
+    .o_hbm_apb_pready_1     (hbm_apb_pready_1         ),
+    .o_hbm_apb_prdata_1     (hbm_apb_prdata_1         ),
+    .o_hbm_apb_pslverr_1    (hbm_apb_pslverr_1        ),
+    .i_hbm_apb_preset_n_0   (hbm_apb_preset_n_0       ),
+    .o_hbm_apb_paddr_0      (hbm_apb_paddr_0          ),
+    .o_hbm_apb_pprot_0      (hbm_apb_pprot_0          ),
+    .o_hbm_apb_psel_0       (hbm_apb_psel_0           ),
+    .o_hbm_apb_penable_0    (hbm_apb_penable_0        ),
+    .o_hbm_apb_pwrite_0     (hbm_apb_pwrite_0         ),
+    .o_hbm_apb_pwdata_0     (hbm_apb_pwdata_0         ),
+    .o_hbm_apb_pstrb_0      (hbm_apb_pstrb_0          ),
+    .o_hbm_apb_pready_0     (hbm_apb_pready_0         ),
+    .o_hbm_apb_prdata_0     (hbm_apb_prdata_0         ),
+    .o_hbm_apb_pslverr_0    (hbm_apb_pslverr_0        ),
+    .o_cl_sh_hbm_stat_int   (                         ),
+    .o_hbm_ready            (hbm_ready                )
+  );
 
 //=============================================================================
 //
