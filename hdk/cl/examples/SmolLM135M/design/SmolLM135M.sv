@@ -17,10 +17,10 @@
 
 
 //====================================================================================
-// Top level module file for Int4MatMul
+// Top level module file for SmolLM135M
 //====================================================================================
 
-module Int4MatMul
+module SmolLM135M
     #(
       parameter EN_DDR = 0,
       parameter EN_HBM = 0
@@ -30,7 +30,7 @@ module Int4MatMul
     );
 
 `include "cl_id_defines.vh" // CL ID defines required for all examples
-`include "Int4MatMul_defines.vh"
+`include "SmolLM135M_defines.vh"
 
 
 //=============================================================================
@@ -128,32 +128,24 @@ module Int4MatMul
 // OCL
 //=============================================================================
 
-  AXIMatmulWrapper #(.BSZ(4), .M(8), .N(8), .K(8)) u_axi_matmul (
-    .clk        (clk_main_a0),
-    .rst_n      (rst_main_n),
+  // Cause Protocol Violations
+  always_comb begin
+    cl_ocl_bresp   = 'b0;
+    cl_ocl_rresp   = 'b0;
+    cl_ocl_rvalid  = 'b0;
+  end
 
-    .awvalid    (ocl_cl_awvalid),
-    .awaddr     (ocl_cl_awaddr),
-    .awready    (cl_ocl_awready),
+  // Remaining CL Output Ports
+  always_comb begin
+    cl_ocl_awready = 'b0;
+    cl_ocl_wready  = 'b0;
 
-    .wvalid     (ocl_cl_wvalid),
-    .wdata      (ocl_cl_wdata),
-    .wstrb      (ocl_cl_wstrb),
-    .wready     (cl_ocl_wready),
+    cl_ocl_bvalid = 'b0;
 
-    .bvalid     (cl_ocl_bvalid),
-    .bresp      (cl_ocl_bresp),
-    .bready     (ocl_cl_bready),
+    cl_ocl_arready = 'b0;
 
-    .arvalid    (ocl_cl_arvalid),
-    .araddr     (ocl_cl_araddr),
-    .arready    (cl_ocl_arready),
-
-    .rvalid     (cl_ocl_rvalid),
-    .rdata      (cl_ocl_rdata),
-    .rresp      (cl_ocl_rresp),
-    .rready     (ocl_cl_rready)
-  );
+    cl_ocl_rdata   = 'b0;
+  end
 
 //=============================================================================
 // SDA
@@ -313,4 +305,4 @@ module Int4MatMul
     PCIE_RP_TXN    = 'b0;
   end
 
-endmodule // Int4MatMul
+endmodule // SmolLM135M

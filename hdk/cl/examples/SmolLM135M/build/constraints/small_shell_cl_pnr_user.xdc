@@ -16,27 +16,4 @@
 # =============================================================================
 
 
--define CL_NAME=Int4MatMul
--define DISABLE_VJTAG_DEBUG
-
-# NOTE: Modifying the auto-generate block will break it
-# Disable by defining `export DONT_GENERATE_FILE_LIST=1` before running `make`
-
-##############################
-#### BEGIN AUTO-GENERATE #####
-
--include $CL_DIR/design/
-
-$CL_DIR/design/AXIMatmulHandler.sv
-$CL_DIR/design/AXI3DMatmulHandler.sv
-$CL_DIR/design/AXIMatmulWrapper.sv
-$CL_DIR/design/Int4MatMul.sv
-$CL_DIR/design/Matmul2D.sv
-$CL_DIR/design/Matmul3D.sv
-
-##### END AUTO-GENERATE ######
-##############################
-
--include $CL_DIR/verif/tests
--f $HDK_COMMON_DIR/verif/tb/filelists/tb.${SIMULATOR}.f
-${TEST_NAME}
+# Add Small_Shell P&R constraints here

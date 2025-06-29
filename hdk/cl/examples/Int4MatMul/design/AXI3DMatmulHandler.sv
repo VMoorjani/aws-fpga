@@ -1,4 +1,5 @@
-module AXIMatmulHandler #(
+module AXI3DMatmulHandler #(
+    parameter BSZ = 4,
     parameter M = 8,
     parameter N = 8,
     parameter K = 8
@@ -28,9 +29,9 @@ module AXIMatmulHandler #(
     logic rst_n_sync;
     logic [31:0] control_reg; // 0x0000000
 
-    logic signed [3:0] A [M][K];
-    logic signed [3:0] B [K][N];
-    logic signed [15:0] C [M][N];
+    logic signed [3:0] A [BSZ][M][K];
+    logic signed [3:0] B [BSZ][K][N];
+    logic signed [15:0] C [BSZ][M][N];
     
     logic [31:0] axi_wr_addr;
     logic [31:0] axi_rd_addr;
@@ -43,8 +44,8 @@ module AXIMatmulHandler #(
 
     localparam int ADDR_CTL     = 32'h0000_0000;
     localparam int ADDR_A_BASE  = 32'h0000_0004;
-    localparam int ADDR_B_BASE  = ADDR_A_BASE + (M*K)*4; // Start of B
-    localparam int ADDR_C_BASE  = ADDR_B_BASE + (K*N)*4; // Start of C
+    localparam int ADDR_B_BASE  = ADDR_A_BASE + (BSZ*M*K)*4; // Start of B
+    localparam int ADDR_C_BASE  = ADDR_B_BASE + (BSZ*K*N)*4; // Start of C
 
     assign awready = !axi_wr_active; // ready for a write address = not already writing data
     assign arready = !axi_rd_active;
@@ -80,7 +81,7 @@ module AXIMatmulHandler #(
         end
     end
 
-    Matmul2D #(.M(M), .N(N), .K(K)) u_matmul (
+    Matmul3D #(.BSZ(BSZ), .M(M), .N(N), .K(K)) u_matmul (
         .clk(clk),
         .reset_n(rst_n_sync),
         .start(start_mult),
@@ -115,16 +116,20 @@ module AXIMatmulHandler #(
                     if (axi_wr_addr >= ADDR_A_BASE && axi_wr_addr < ADDR_B_BASE) begin
                         if (wstrb[0]) begin
                             automatic int idx  = (axi_wr_addr - ADDR_A_BASE) >> 2; // word index
-                            automatic int row  = idx / K;
-                            automatic int col  = idx % K;
-                            if (row < M) A[row][col] <= wdata[3:0];
+                            automatic int batch = idx / (M*K);
+                            automatic int batch_offset = idx % (M*K);
+                            automatic int row  = batch_offset / K;
+                            automatic int col  = batch_offset % K;
+                            if (batch < BSZ && row < M) A[batch][row][col] <= wdata[3:0];
                         end
                     end else if (axi_wr_addr >= ADDR_B_BASE && axi_wr_addr < ADDR_C_BASE) begin
                         if (wstrb[0]) begin
                             automatic int idx  = (axi_wr_addr - ADDR_B_BASE) >> 2;
-                            automatic int row  = idx / N;
-                            automatic int col  = idx % N;
-                            if (row < K) B[row][col] <= wdata[3:0];
+                            automatic int batch = idx / (K*N);
+                            automatic int batch_offset = idx % (K*N);
+                            automatic int row  = batch_offset / N;
+                            automatic int col  = batch_offset % N;
+                            if (batch < BSZ && row < K) B[batch][row][col] <= wdata[3:0];
                         end
                     end
                 end
@@ -153,11 +158,17 @@ module AXIMatmulHandler #(
                 rvalid <= 1'b1;
                 if (araddr == ADDR_CTL) begin
                     rdata <= control_reg;
-                end else if (araddr >= ADDR_C_BASE && araddr < ADDR_C_BASE + (M*N)*4) begin
+                end else if (araddr >= ADDR_C_BASE && araddr < ADDR_C_BASE + (BSZ*M*N)*4) begin
                     automatic int idx  = (araddr - ADDR_C_BASE) >> 2;
-                    automatic int row  = idx / N;
-                    automatic int col  = idx % N;
-                    rdata <= {16'h0, C[row][col]};
+                    automatic int batch = idx / (M*N);
+                    automatic int batch_offset = idx % (M*N);
+                    automatic int row  = batch_offset / N;
+                    automatic int col  = batch_offset % N;
+                    if (batch < BSZ) begin
+                        rdata <= {16'h0, C[batch][row][col]};
+                    end else begin
+                        rdata <= 32'h00000000;
+                    end
                 end else begin
                     rdata <= 32'h00000000;
                 end
@@ -168,4 +179,4 @@ module AXIMatmulHandler #(
         end
     end
     
-endmodule
+endmodule 

@@ -16,7 +16,7 @@
 # =============================================================================
 
 
--define CL_NAME=Int4MatMul
+-define CL_NAME=SmolLM135M
 -define DISABLE_VJTAG_DEBUG
 
 # NOTE: Modifying the auto-generate block will break it
@@ -27,12 +27,8 @@
 
 -include $CL_DIR/design/
 
-$CL_DIR/design/AXIMatmulHandler.sv
-$CL_DIR/design/AXI3DMatmulHandler.sv
-$CL_DIR/design/AXIMatmulWrapper.sv
-$CL_DIR/design/Int4MatMul.sv
-$CL_DIR/design/Matmul2D.sv
-$CL_DIR/design/Matmul3D.sv
+$CL_DIR/design/SmolLM135M.sv
+$CL_DIR/design/cl_id_defines.vh
 
 ##### END AUTO-GENERATE ######
 ##############################

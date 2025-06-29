@@ -16,27 +16,15 @@
 # =============================================================================
 
 
--define CL_NAME=Int4MatMul
--define DISABLE_VJTAG_DEBUG
+set curr_wave [current_wave_config]
+if { [string length $curr_wave] == 0 } {
+  if { [llength [get_objects]] > 0} {
+    add_wave /
+    set_property needs_save false [current_wave_config]
+  } else {
+     send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
+  }
+}
 
-# NOTE: Modifying the auto-generate block will break it
-# Disable by defining `export DONT_GENERATE_FILE_LIST=1` before running `make`
-
-##############################
-#### BEGIN AUTO-GENERATE #####
-
--include $CL_DIR/design/
-
-$CL_DIR/design/AXIMatmulHandler.sv
-$CL_DIR/design/AXI3DMatmulHandler.sv
-$CL_DIR/design/AXIMatmulWrapper.sv
-$CL_DIR/design/Int4MatMul.sv
-$CL_DIR/design/Matmul2D.sv
-$CL_DIR/design/Matmul3D.sv
-
-##### END AUTO-GENERATE ######
-##############################
-
--include $CL_DIR/verif/tests
--f $HDK_COMMON_DIR/verif/tb/filelists/tb.${SIMULATOR}.f
-${TEST_NAME}
+run -all
+quit
